@@ -1,13 +1,14 @@
 # Front End
+url: http://localhost:5137
+```
 cd frontend
 npm install
 npm run dev
-
-url: http://localhost:5137
-
+```
 
 # Back End
+url: http://localhost:8080
+```
 cd demo
 docker compose up -d --build
-
-url: http://localhost:8080
+```
