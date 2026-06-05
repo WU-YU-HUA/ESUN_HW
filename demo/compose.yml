@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # 1. PostgreSQL 資料庫服務
+  # ==========================================
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_DB: postgres      # 資料庫名稱
+      POSTGRES_USER: postgres       # 帳號
+      POSTGRES_PASSWORD: password123 # 密碼
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./DB:/docker-entrypoint-initdb.d
+    healthcheck: # 確保資料庫完全啟動了，後端才能去連它
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # 2. Spring Boot 後端服務
+  # ==========================================
+  backend-app:
+    build: .
+    container_name: backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/postgres
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password123
+      - SPRING_SQL_INIT_MODE=always
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION=true
+    depends_on:
+      postgres-db:
+        condition: service_healthy # 資料庫健康检查通過後才啟動後端
+
+volumes:
+  postgres_data:
